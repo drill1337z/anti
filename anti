@@ -1,0 +1,108 @@
+local LocalPlayer = game.Players.LocalPlayer
+local char = LocalPlayer.Character
+local HumanoidRootPart = char and char:WaitForChild("HumanoidRootPart")
+local RightGrip = char and char:WaitForChild("RightHand")
+local old = HumanoidRootPart and HumanoidRootPart.CFrame
+local AntiVoidEnabled = true
+_G.Anti = true
+
+local function toolMatch(Handle)
+    for _, Player in ipairs(game.Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            local RightArm = Character and Character:FindFirstChild("Right Arm")
+            local RightGrip = RightArm and RightArm:FindFirstChild("RightGrip")
+
+            if RightGrip and RightGrip.Part1 == Handle then
+                return Player
+            end
+        end
+    end
+end
+
+local function onCharacter(Character)
+    local RightArm = Character and Character:FindFirstChild("Right Arm")
+
+    if RightArm then
+        RightArm.ChildAdded:Connect(function(child)
+            if AntiVoidEnabled and child:IsA("Weld") and child.Name == "RightGrip" then
+                local ConnectedHandle = child.Part1
+                local matched = toolMatch(ConnectedHandle)
+
+                if matched then
+                    ConnectedHandle.Parent:Destroy()
+                    print(matched, "just tried to void you lol!")
+                end
+            end
+        end)
+    end
+end
+
+local function AutoLoad()
+    if _G.Anti then
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("Tool") then
+                v:ClearAllChildren()
+                HumanoidRootPart.CFrame = old
+                HumanoidRootPart.Velocity = Vector3.new()
+                HumanoidRootPart.RotVelocity = Vector3.new()
+                HumanoidRootPart.AssemblyAngularVelocity = Vector3.new()        
+                HumanoidRootPart.AssemblyLinearVelocity = Vector3.new()
+            end
+        end
+    end
+end
+
+if _G.Anti then
+    for _, v in pairs(game.Players:GetChildren()) do
+        if v.Name ~= LocalPlayer.Name then
+            pcall(function()
+                v.Character:WaitForChild("RightHand").RightWristRigAttachment.Parent = nil
+                v.Character:WaitForChild("RightHand").RightGripAttachment.Parent = nil
+                v.Character:WaitForChild("RightUpperArm").RightShoulderAttachment.Parent = nil
+                v.Character:WaitForChild("RightUpperArm").RightShoulderRigAttachment.Parent = nil
+                v.Character:WaitForChild("RightUpperArm").RightElbowRigAttachment.Parent = nil
+            end)
+        end
+    end
+
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("Tool") then
+            if v:IsA("BasePart") or v:IsA("Meshpart") then
+                v.Rotation = Vector3.new()
+                v.Velocity = Vector3.new()
+                v.RotVelocity = Vector3.new()
+                v.AssemblyAngularVelocity = Vector3.new()        
+                v.AssemblyLinearVelocity = Vector3.new()
+            end
+        end
+    end
+
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("Tool") then
+            v:Clone()
+        end
+    end
+
+    for _, v in pairs(RightGrip:GetDescendants()) do
+        if v.Name == "RightGrip" then
+            v.Parent = nil
+            HumanoidRootPart.Velocity = Vector3.new()
+            HumanoidRootPart.RotVelocity = Vector3.new()
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    onCharacter(character)
+end)
+
+
+onCharacter(LocalPlayer.Character)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    pcall(function()
+        AutoLoad()
+        HumanoidRootPart.Anchored = false
+    end)
+end)
